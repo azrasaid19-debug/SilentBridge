@@ -1,7 +1,20 @@
 import { Link } from "react-router";
+import { requireUser } from "../.server/session";
+import { getUserById } from "../models/user";
 
-export default function Dashboard() {
-  console.log("Dashboard loaded");
+export async function loader({ request }) {
+  const userId = await requireUser(request);
+  const user = await getUserById(userId);
+
+  return { user };
+}
+
+export default function Dashboard({ loaderData }) {
+  if (!loaderData) {
+    return <p>Loading...</p>;
+  }
+
+  const { user } = loaderData;
 
   return (
     <main>
@@ -9,7 +22,7 @@ export default function Dashboard() {
       <section className="bg-linear-to-b from-teal-100 via-white to-teal-50 dark:from-teal-950 dark:via-slate-900 dark:to-slate-900 py-20">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-800 dark:text-white mb-6">
-            Welcome Back
+            Welcome Back {user?.name}
             <span className="text-teal-600 dark:text-teal-400"> 👋</span>
           </h1>
 

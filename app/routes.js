@@ -11,4 +11,5 @@ export default [
   route("about", "routes/about.jsx"),
   route("community", "routes/community.jsx"),
   route("learn", "routes/learn.jsx"),
+  route("logout", "routes/logout.jsx"),
 ];

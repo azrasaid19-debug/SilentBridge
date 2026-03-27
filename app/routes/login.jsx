@@ -1,5 +1,33 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { Form, redirect } from "react-router";
+import { verifyUser } from "../models/user";
+import { getSession, commitSession } from "../.server/session";
+import { useActionData } from "react-router";
+
+export async function action({ request }) {
+  let formData = await request.formData();
+
+  let email = formData.get("email");
+  let password = formData.get("password");
+
+  console.log("LOGIN HIT:", { email, password });
+
+  let user = await verifyUser(email, password);
+
+  if (!user) {
+    return { error: "Invalid email or password" };
+  }
+
+  let session = await getSession(request.headers.get("Cookie"));
+  session.set("userId", user._id.toString());
+
+  return redirect("/dashboard", {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
+}
 
 export default function Login() {
   // FORM STATES
@@ -10,27 +38,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   // ERROR MESSAGE
-  const [error, setError] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    setError("");
-
-    if (!email.trim()) {
-      setError("Please enter your email");
-      return;
-    }
-
-    if (!password.trim()) {
-      setError("Please enter your password");
-      return;
-    }
-
-    console.log("Login submitted");
-    console.log("Email:", email);
-    console.log("Password:", password);
-  };
+  const actionData = useActionData();
 
   return (
     <main
@@ -64,7 +72,16 @@ export default function Login() {
           rounded-2xl shadow-xl p-10 backdrop-blur-sm
           "
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <Form
+            method="post"
+            onSubmit={(e) => {
+              if (!email.trim() || !password.trim()) {
+                e.preventDefault();
+                setError("Please fill all fields");
+              }
+            }}
+            className="space-y-6"
+          >
             {/* EMAIL */}
             <div>
               <label
@@ -76,6 +93,7 @@ export default function Login() {
 
               <input
                 id="email"
+                name="email"
                 type="email"
                 autoComplete="email"
                 placeholder="Enter your email"
@@ -96,6 +114,7 @@ export default function Login() {
 
               <input
                 id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 placeholder="Enter your password"
@@ -116,24 +135,20 @@ export default function Login() {
             </div>
 
             {/* ERROR MESSAGE */}
-            {error && (
-              <p
-                id="form-error"
-                aria-live="assertive"
-                className="text-sm text-red-500 font-medium"
-              >
-                ⚠ {error}
+            {actionData?.error && (
+              <p className="text-sm text-red-500 font-medium">
+                ⚠ {actionData.error}
               </p>
             )}
 
             {/* BUTTON */}
             <button
               type="submit"
-              className="w-full bg-teal-600 text-white py-3 rounded-xl font-medium hover:bg-teal-700 transition shadow-md"
+              className="w-full bg-teal-600 cursor-pointer text-white py-3 rounded-xl font-medium hover:bg-teal-700 transition shadow-md"
             >
               Login
             </button>
-          </form>
+          </Form>
 
           {/* REGISTER LINK */}
           <p className="text-center text-sm text-slate-600 dark:text-slate-300 mt-6">

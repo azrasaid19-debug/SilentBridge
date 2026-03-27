@@ -1,4 +1,48 @@
+import { Form, redirect, useNavigation } from "react-router";
 import { useState } from "react";
+import { createSign } from "../models/signs";
+import { requireUser } from "../.server/session";
+
+export async function action({ request }) {
+  // React Router will send the form data here on POST.
+  const formData = await request.formData();
+  const userId = await requireUser(request);
+
+  const signName = formData.get("signName");
+  const category = formData.get("category");
+  const customCategory = formData.get("customCategory");
+  const description = formData.get("description");
+  const resourceLink = formData.get("resourceLink");
+  const notes = formData.get("notes");
+  const confidence = formData.get("confidence");
+
+  // Basic server-side validation (so users can't bypass client validation).
+  if (!signName || !description || !confidence) {
+    return null;
+  }
+
+  const finalCategory = category === "other" ? customCategory : category;
+
+  if (!finalCategory || !finalCategory.toString().trim()) {
+    return null;
+  }
+
+  await createSign(
+    {
+      // Model normalization maps these into DB fields.
+      signName,
+      category: finalCategory,
+      description,
+      resourceLink,
+      notes,
+      confidence,
+    },
+    userId,
+  );
+
+  // After saving, go to the list page (loader() will re-fetch from MongoDB).
+  return redirect("/my-signs");
+}
 
 export default function AddSign() {
   const [signName, setSignName] = useState("");
@@ -10,56 +54,38 @@ export default function AddSign() {
   const [confidence, setConfidence] = useState("");
 
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+  const navigation = useNavigation();
 
+  const handleClientSideValidation = (e) => {
     const finalCategory = category === "other" ? customCategory : category;
 
     if (!signName.trim()) {
+      e.preventDefault();
       setError("Please enter the sign name.");
       return;
     }
 
     if (!finalCategory.trim()) {
+      e.preventDefault();
       setError("Please select or enter a category.");
       return;
     }
 
     if (!description.trim()) {
+      e.preventDefault();
       setError("Please enter a description for the sign.");
       return;
     }
 
     if (!confidence) {
+      e.preventDefault();
       setError("Please select your confidence level.");
       return;
     }
 
-    console.log("Sign submitted:", {
-      signName,
-      category: finalCategory,
-      description,
-      resourceLink,
-      notes,
-      confidence,
-    });
-
-    setSuccess(true);
-
-    setTimeout(() => {
-      setSuccess(false);
-    }, 2000);
-
-    setSignName("");
-    setCategory("");
-    setCustomCategory("");
-    setDescription("");
-    setResourceLink("");
-    setNotes("");
-    setConfidence("");
+    // If we reach here, validation passed: let the form submit normally.
+    setError("");
   };
 
   return (
@@ -80,8 +106,9 @@ export default function AddSign() {
       {/* FORM */}
       <section className="py-16 bg-teal-50 dark:bg-teal-950/30">
         <div className="max-w-2xl mx-auto px-6">
-          <form
-            onSubmit={handleSubmit}
+          <Form
+            method="post"
+            onSubmit={handleClientSideValidation}
             className="bg-white dark:bg-slate-800 border border-teal-100 dark:border-teal-900 rounded-2xl shadow-xl p-10 space-y-6"
           >
             {/* SIGN NAME */}
@@ -92,6 +119,7 @@ export default function AddSign() {
 
               <input
                 id="signName"
+                name="signName"
                 type="text"
                 required
                 aria-required="true"
@@ -110,6 +138,7 @@ export default function AddSign() {
 
               <select
                 id="category"
+                name="category"
                 required
                 aria-required="true"
                 value={category}
@@ -143,6 +172,7 @@ export default function AddSign() {
 
                 <input
                   id="customCategory"
+                  name="customCategory"
                   type="text"
                   required
                   aria-required="true"
@@ -162,6 +192,7 @@ export default function AddSign() {
 
               <textarea
                 id="description"
+                name="description"
                 required
                 aria-required="true"
                 placeholder="Describe how the sign is performed"
@@ -179,6 +210,7 @@ export default function AddSign() {
 
               <input
                 id="resourceLink"
+                name="resourceLink"
                 type="text"
                 placeholder="Paste learning video link"
                 value={resourceLink}
@@ -195,6 +227,7 @@ export default function AddSign() {
 
               <textarea
                 id="notes"
+                name="notes"
                 placeholder="Notes to help remember this sign"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -210,6 +243,7 @@ export default function AddSign() {
 
               <select
                 id="confidence"
+                name="confidence"
                 required
                 aria-required="true"
                 value={confidence}
@@ -232,21 +266,15 @@ export default function AddSign() {
             <button
               type="submit"
               className="w-full bg-teal-600 text-white py-3 rounded-xl hover:bg-teal-700 transition"
+              disabled={navigation.state === "submitting"}
             >
-              Save Sign
+              {navigation.state === "submitting" ? "Saving..." : "Save Sign"}
             </button>
-          </form>
+          </Form>
         </div>
       </section>
 
-      {success && (
-        <div
-          role="status"
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-teal-600 text-white px-6 py-3 rounded-xl shadow-lg"
-        >
-          ✓ Sign saved successfully
-        </div>
-      )}
+      {/* success state is no longer needed because action() redirects on success */}
     </main>
   );
 }

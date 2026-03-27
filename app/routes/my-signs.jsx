@@ -1,32 +1,45 @@
+import { Form, redirect } from "react-router";
 import { useState } from "react";
+import { deleteSign, updateSign } from "../models/signs";
+import { requireUser } from "../.server/session";
+import { getSignsByUser } from "../models/signs";
 
-export default function MySigns() {
-  console.log("My Signs page loaded");
+export async function action({ request }) {
+  // React Router will call this on POST from the <Form> buttons below.
+  const formData = await request.formData();
+  const intent = formData.get("_action");
 
-  // sample data (will come from backend later)
-  const [signs, setSigns] = useState([
-    {
-      name: "Thank You",
-      category: "Courtesy",
-      confidence: "High",
-      notes: "Move hand from chin outward.",
-      video: "https://youtube.com",
-    },
-    {
-      name: "Family",
-      category: "Family",
-      confidence: "Medium",
-      notes: "Hands form a circle shape.",
-      video: "https://youtube.com",
-    },
-    {
-      name: "Monday",
-      category: "Days",
-      confidence: "Low",
-      notes: "Gesture representing the first day.",
-      video: "https://youtube.com",
-    },
-  ]);
+  if (intent === "update-sign") {
+    const id = formData.get("id");
+    await updateSign(id, {
+      name: formData.get("name"),
+      category: formData.get("category"),
+      confidence: formData.get("confidence"),
+      notes: formData.get("notes"),
+      video: formData.get("video"),
+    });
+
+    return redirect("/my-signs");
+  }
+
+  if (intent === "delete-sign") {
+    const id = formData.get("id");
+    await deleteSign(id);
+    return redirect("/my-signs");
+  }
+
+  return redirect("/my-signs");
+}
+
+export async function loader({ request }) {
+  const userId = await requireUser(request);
+
+  const signs = await getSignsByUser(userId);
+
+  return { signs };
+}
+export default function MySigns({ loaderData }) {
+  const { signs } = loaderData;
 
   // controls UI states
   const [expandedIndex, setExpandedIndex] = useState(null);
@@ -53,7 +66,8 @@ export default function MySigns() {
   // start editing a specific sign
   const startEditing = (index) => {
     setEditingIndex(index);
-    setEditData(signs[index]);
+    // `index` comes from `filteredSigns.map(...)`, so we must read from `filteredSigns`.
+    setEditData(filteredSigns[index]);
   };
 
   // cancel editing
@@ -67,11 +81,27 @@ export default function MySigns() {
   };
 
   // save edited data
-  const saveEdit = (index) => {
-    const updatedSigns = [...signs];
-    updatedSigns[index] = editData;
-    setSigns(updatedSigns);
-    setEditingIndex(null);
+  const saveEdit = async () => {
+    const id = editData?.id;
+    if (!id) return;
+
+    // POST to this same route so React Router calls action().
+    const formData = new FormData();
+    formData.append("_action", "update-sign");
+    formData.append("id", id);
+    formData.append("name", editData.name);
+    formData.append("category", editData.category);
+    formData.append("confidence", editData.confidence);
+    formData.append("notes", editData.notes || "");
+    formData.append("video", editData.video || "");
+
+    await fetch("/my-signs", {
+      method: "post",
+      body: formData,
+    });
+
+    // Reload so loader() fetches the latest DB state.
+    window.location.href = "/my-signs";
   };
 
   return (
@@ -119,7 +149,7 @@ export default function MySigns() {
           <div className="grid md:grid-cols-3 gap-8">
             {filteredSigns.map((sign, index) => (
               <div
-                key={index}
+                key={sign.id || index}
                 className="bg-white dark:bg-slate-800 border border-teal-100 dark:border-teal-900 p-6 rounded-2xl shadow-md hover:shadow-xl transition"
               >
                 {/* DEFAULT VIEW */}
@@ -173,6 +203,24 @@ export default function MySigns() {
                         >
                           Open Learning Resource
                         </a>
+
+                        <div className="mt-4">
+                          {/* Persist delete via React Router action() */}
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="_action"
+                              value="delete-sign"
+                            />
+                            <input type="hidden" name="id" value={sign.id} />
+                            <button
+                              type="submit"
+                              className="text-sm px-3 py-1 bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100"
+                            >
+                              Delete
+                            </button>
+                          </Form>
+                        </div>
                       </div>
                     )}
                   </>
@@ -251,7 +299,7 @@ export default function MySigns() {
                     {/* ACTION BUTTONS */}
                     <div className="flex gap-3">
                       <button
-                        onClick={() => saveEdit(index)}
+                        onClick={saveEdit}
                         className="px-3 py-1 bg-teal-600 text-white rounded-md"
                       >
                         Save

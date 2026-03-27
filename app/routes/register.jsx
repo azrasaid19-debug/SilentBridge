@@ -1,5 +1,37 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { Form, redirect } from "react-router";
+import { createUser } from "../models/user";
+import { getSession, commitSession } from "../.server/session";
+import { useActionData } from "react-router";
+
+export async function action({ request }) {
+  let formData = await request.formData();
+
+  let name = formData.get("name");
+  let email = formData.get("email");
+  let password = formData.get("password");
+
+  console.log("REGISTER HIT:", { name, email, password });
+
+  try {
+    let result = await createUser({ name, email, password });
+
+    console.log("USER CREATED:", result);
+
+    let session = await getSession(request.headers.get("Cookie"));
+    session.set("userId", result.insertedId.toString());
+
+    return redirect("/dashboard", {
+      headers: {
+        "Set-Cookie": await commitSession(session),
+      },
+    });
+  } catch (error) {
+    console.log("REGISTER ERROR:", error.message);
+    return { error: error.message };
+  }
+}
 
 export default function Register() {
   // FORM STATES
@@ -12,47 +44,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
 
   // ERROR MESSAGE STATE
-  const [error, setError] = useState("");
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    // clear previous error
-    setError("");
-
-    // basic validation
-    if (!name.trim()) {
-      setError("Please enter your name");
-      return;
-    }
-
-    if (!email.trim()) {
-      setError("Please enter your email");
-      return;
-    }
-
-    if (!password.trim()) {
-      setError("Please enter a password");
-      return;
-    }
-
-    if (!confirmPassword.trim()) {
-      setError("Please confirm your password");
-      return;
-    }
-
-    // check passwords match
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    // temporary success (backend later)
-    console.log("Register submitted:");
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Password:", password);
-  };
+  const actionData = useActionData();
 
   return (
     <div
@@ -92,7 +84,16 @@ export default function Register() {
           backdrop-blur-sm
           "
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <Form
+            method="post"
+            onSubmit={(e) => {
+              if (password !== confirmPassword) {
+                e.preventDefault(); // 🚫 stop form submission
+                setError("Passwords do not match");
+              }
+            }}
+            className="space-y-6"
+          >
             {/* NAME */}
 
             <div>
@@ -105,6 +106,7 @@ export default function Register() {
 
               <input
                 id="name"
+                name="name"
                 type="text"
                 placeholder="Enter your name"
                 value={name}
@@ -131,6 +133,7 @@ export default function Register() {
 
               <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="Enter your email"
                 value={email}
@@ -157,10 +160,14 @@ export default function Register() {
 
               <input
                 id="password"
+                name="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 className="
                 w-full px-4 py-3 rounded-lg
                 border border-slate-300 dark:border-slate-700
@@ -194,10 +201,14 @@ export default function Register() {
 
               <input
                 id="confirmPassword"
+                name="confirmPassword"
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirm password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setError("");
+                }}
                 className="
                 w-full px-4 py-3 rounded-lg
                 border border-slate-300 dark:border-slate-700
@@ -210,12 +221,9 @@ export default function Register() {
 
             {/* ERROR MESSAGE */}
 
-            {error && (
-              <p
-                className="text-sm text-red-500 font-medium"
-                aria-live="assertive"
-              >
-                ⚠ {error}
+            {actionData?.error && (
+              <p className="text-sm text-red-500 font-medium">
+                ⚠ {actionData.error}
               </p>
             )}
 
@@ -237,7 +245,7 @@ export default function Register() {
             >
               Create Account
             </button>
-          </form>
+          </Form>
 
           {/* LOGIN LINK */}
 

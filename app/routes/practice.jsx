@@ -1,30 +1,15 @@
 import { useState, useEffect } from "react";
+import { getSigns } from "../models/signs";
 
-export default function Practice() {
-  // temporary data (will come from backend later)
-  const signs = [
-    {
-      signName: "Thank You",
-      category: "Greetings",
-      description: "Hand moves from chin outward",
-      resourceLink: "https://youtube.com/example",
-      confidence: "Medium",
-    },
-    {
-      signName: "Help",
-      category: "Daily Communication",
-      description: "Closed fist resting on open palm",
-      resourceLink: "https://youtube.com/example2",
-      confidence: "Low",
-    },
-    {
-      signName: "Family",
-      category: "Family",
-      description: "Hands form an 'F' shape moving outward",
-      resourceLink: "https://youtube.com/example3",
-      confidence: "High",
-    },
-  ];
+export async function loader() {
+  // Load saved signs from MongoDB.
+  // Practice then filters locally by confidence level.
+  return await getSigns();
+}
+
+export default function Practice({ loaderData }) {
+  // `loaderData` is the MongoDB result from our `loader()` above.
+  const signs = loaderData || [];
 
   /* ---------------- STATE ---------------- */
 
@@ -234,7 +219,7 @@ export default function Practice() {
 
             <div className="md:col-span-2 bg-white dark:bg-slate-800 border border-teal-100 dark:border-teal-900 rounded-2xl shadow-xl p-10 text-center">
               <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-6">
-                {currentSign?.signName}
+                {currentSign?.name}
               </h2>
 
               {!showHint && (

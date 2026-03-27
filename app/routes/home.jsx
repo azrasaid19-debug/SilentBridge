@@ -132,3 +132,7 @@ export default function Home() {
     </main>
   );
 }
+
+
+// Add delete button for each sign
+// Open a resource link option to only appear when one is 

@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
   useLocation,
+  useNavigate,
 } from "react-router";
 
 import "./app.css";
@@ -33,6 +34,7 @@ export const links = () => [
 export const meta = () => [
   { title: "SilentBridge" },
   { name: "description", content: "Practice sign language effectively" },
+  { name: "viewport", content: "width=device-width, initial-scale=1" },
 ];
 
 /* ---------------- LAYOUT ---------------- */
@@ -47,6 +49,7 @@ export function Layout({ children }) {
   });
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // TEMP auth
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -83,10 +86,16 @@ export function Layout({ children }) {
     setMobileMenu(false);
   }, [location.pathname]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const navLinkClass = ({ isActive }) =>
     isActive
       ? "text-teal-600 dark:text-teal-400"
       : "text-slate-700 dark:text-slate-300 hover:text-teal-600 transition";
+
+  const navigate = useNavigate();
 
   return (
     <html lang="en">
@@ -164,8 +173,8 @@ export function Layout({ children }) {
                   </NavLink>
 
                   <button
-                    onClick={() => setIsLoggedIn(false)}
-                    className="text-red-500"
+                    onClick={() => navigate("/logout")}
+                    className="text-red-500 cursor-pointer"
                   >
                     Logout
                   </button>
@@ -178,7 +187,7 @@ export function Layout({ children }) {
                 className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-slate-800 transition"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? "☀️" : "🌙"}
+                {mounted && (darkMode ? "☀️" : "🌙")}
               </button>
             </div>
 
@@ -302,7 +311,7 @@ export function Layout({ children }) {
                 className="p-2 rounded-full hover:bg-teal-100 dark:hover:bg-slate-800 transition"
                 aria-label="Toggle dark mode"
               >
-                {darkMode ? "☀️" : "🌙"}
+                {mounted && (darkMode ? "☀️" : "🌙")}
               </button>
             </div>
           )}
