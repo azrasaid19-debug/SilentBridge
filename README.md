@@ -1,84 +1,181 @@
-# Welcome to React Router!
+# 🌉 SilentBridge
 
-A modern, production-ready template for building full-stack React applications using React Router.
-
-## Features
-
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
-
-## Getting Started
-
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+A full-stack web application designed to help users **learn, save, and practice sign language effectively**.
 
 ---
 
-Built with ❤️ using React Router.
+## 🚀 Overview
+
+SilentBridge is a modern full-stack application built with React Router that allows users to:
+
+- Learn sign language concepts
+- Save signs they’ve learned
+- Practice and track their confidence
+- Manage their personal sign library
+
+The application focuses on **personalized learning**, where each user has their own saved signs and progress.
+
+---
+
+## 🧱 Tech Stack
+
+### Frontend
+
+- React (via React Router)
+- Tailwind CSS
+- Responsive design (mobile + desktop)
+- Dark mode support
+
+### Backend
+
+- React Router (full-stack loaders & actions)
+- MongoDB (database)
+- bcryptjs (password hashing)
+- Cookie-based session authentication
+
+---
+
+## 🔐 Authentication
+
+- Users can register and log in using email and password
+- Passwords are securely hashed using bcrypt
+- Sessions are stored in HTTP-only cookies
+- Protected routes ensure only logged-in users can access private pages
+
+---
+
+## ✋ Features
+
+### 🌐 Public Pages
+
+- Home
+- Learn
+- Community
+- About
+- Login / Register
+
+### 🔒 Private Pages
+
+- Dashboard
+- Add Sign
+- My Signs
+- Practice
+
+---
+
+## ✍️ Sign Management (CRUD)
+
+Users can:
+
+- ➕ Add new signs
+- 📄 View saved signs
+- ✏️ Edit existing signs
+- ❌ Delete signs
+
+Each sign includes:
+
+- Name
+- Category
+- Description
+- Resource link (e.g., YouTube)
+- Notes
+- Confidence level
+
+All signs are linked to the logged-in user, ensuring data privacy.
+
+---
+
+## 🗄️ Database Structure
+
+### Users Collection
+
+- name
+- email (unique)
+- password (hashed)
+
+### Signs Collection
+
+- name
+- category
+- description
+- video (resource link)
+- notes
+- confidence
+- userId
+- createdAt
+
+---
+
+## 🍪 Session Management
+
+- Implemented using React Router cookie session storage
+- Sessions persist login state across pages
+- Users are redirected if not authenticated
+
+---
+
+## ⚙️ Environment Variables
+
+Create a `.env` file in the root:
+
+MONGODB_CONNECTION_STRING=your_mongodb_connection_string  
+SESSION_SECRET=your_secret_key  
+MONGODB_DB_NAME=silentbridge
+
+---
+
+## 🧪 Development
+
+### Install dependencies
+
+npm install
+
+### Run development server
+
+npm run dev
+
+App runs on:
+http://localhost:5173
+
+---
+
+## 📦 Build
+
+npm run build
+
+---
+
+## 🚀 Deployment
+
+The app can be deployed using:
+
+- Docker
+- Railway
+- Render
+- Fly.io
+- AWS / GCP / Azure
+
+---
+
+## ✅ Summary
+
+SilentBridge demonstrates:
+
+- Secure authentication (bcrypt + sessions)
+- MongoDB integration
+- Full CRUD functionality
+- Route protection
+- Clean UI/UX with Tailwind
+- Responsive design
+
+---
+
+## 👩‍💻 Author
+
+Built as a final project for full-stack development training.
+
+---
+
+## ❤️ Acknowledgment
+
+Built using React Router and modern web development practices.
