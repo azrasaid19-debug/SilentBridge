@@ -156,6 +156,14 @@ export default function MySigns({ loaderData }) {
 
                 {editingIndex !== index && (
                   <>
+                    {sign.image && (
+                      <img
+                        src={sign.image}
+                        alt={sign.name}
+                        className="w-full h-40 object-cover rounded-lg mb-3"
+                      />
+                    )}
+
                     <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-2">
                       {sign.name}
                     </h3>
@@ -192,17 +200,22 @@ export default function MySigns({ loaderData }) {
                     {expandedIndex === index && (
                       <div className="mt-4 border-t pt-4">
                         <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+                          <strong>Description:</strong> {sign.description}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
                           <strong>Notes:</strong> {sign.notes}
                         </p>
 
-                        <a
-                          href={sign.video}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-teal-600 underline"
-                        >
-                          Open Learning Resource
-                        </a>
+                        {sign.video && sign.video.trim() !== "" && (
+                          <a
+                            href={sign.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-teal-600 underline"
+                          >
+                            Open Learning Resource
+                          </a>
+                        )}
 
                         <div className="mt-4">
                           {/* Persist delete via React Router action() */}

@@ -20,6 +20,15 @@ export default function Practice({ loaderData }) {
       ? signs
       : signs.filter((sign) => sign.confidence === filter);
 
+  if (filteredSigns.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold mb-4">No signs available</h2>
+        <p>Add a sign to start practicing.</p>
+      </div>
+    );
+  }
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [practiceCount, setPracticeCount] = useState(0);
   const [seconds, setSeconds] = useState(0);
@@ -53,13 +62,22 @@ export default function Practice({ loaderData }) {
   };
 
   const handlePractice = () => {
-    setPracticeCount(practiceCount + 1);
+    setPracticeCount((prev) => prev + 1);
 
     setShowSuccess(true);
 
     setTimeout(() => {
       setShowSuccess(false);
     }, 1500);
+
+    // 👉 ensure next sign is different
+    let randomIndex;
+    do {
+      randomIndex = Math.floor(Math.random() * filteredSigns.length);
+    } while (randomIndex === currentIndex && filteredSigns.length > 1);
+
+    setCurrentIndex(randomIndex);
+    setShowHint(false);
   };
 
   const handleNext = () => {
@@ -254,9 +272,9 @@ export default function Practice({ loaderData }) {
 
                 <button
                   onClick={handleNext}
-                  className="border border-teal-600 text-teal-600 px-6 py-3 rounded-xl hover:bg-teal-100 dark:hover:bg-teal-900/40 transition"
+                  className="border border-teal-400 text-teal-600 px-6 py-3 rounded-xl hover:bg-teal-100 dark:hover:bg-teal-700 transition"
                 >
-                  Next Sign
+                  Skip
                 </button>
               </div>
             </div>

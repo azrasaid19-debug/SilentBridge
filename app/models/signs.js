@@ -14,6 +14,7 @@ function normalizeSignInput(raw) {
     video: raw.video ?? raw.resourceLink,
     notes: raw.notes,
     confidence: raw.confidence,
+    image: raw.image,
     createdAt: raw.createdAt ?? new Date(),
   };
 }
@@ -46,6 +47,7 @@ function normalizeSignForUpdate(raw) {
   if (raw?.notes !== undefined) updates.notes = raw.notes;
 
   if (raw?.confidence !== undefined) updates.confidence = raw.confidence;
+  if (raw?.image !== undefined) updates.image = raw.image;
 
   return updates;
 }

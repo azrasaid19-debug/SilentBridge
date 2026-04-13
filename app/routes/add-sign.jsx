@@ -1,5 +1,5 @@
 import { Form, redirect, useNavigation } from "react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createSign } from "../models/signs";
 import { requireUser } from "../.server/session";
 
@@ -15,6 +15,7 @@ export async function action({ request }) {
   const resourceLink = formData.get("resourceLink");
   const notes = formData.get("notes");
   const confidence = formData.get("confidence");
+  const image = formData.get("image");
 
   // Basic server-side validation (so users can't bypass client validation).
   if (!signName || !description || !confidence) {
@@ -36,6 +37,7 @@ export async function action({ request }) {
       resourceLink,
       notes,
       confidence,
+      image,
     },
     userId,
   );
@@ -45,6 +47,14 @@ export async function action({ request }) {
 }
 
 export default function AddSign() {
+  useEffect(() => {
+    if (!window.cloudinary) {
+      const script = document.createElement("script");
+      script.src = "https://widget.cloudinary.com/v2.0/global/all.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
   const [signName, setSignName] = useState("");
   const [category, setCategory] = useState("");
   const [customCategory, setCustomCategory] = useState("");
@@ -52,10 +62,27 @@ export default function AddSign() {
   const [resourceLink, setResourceLink] = useState("");
   const [notes, setNotes] = useState("");
   const [confidence, setConfidence] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [error, setError] = useState("");
 
   const navigation = useNavigation();
+
+  const openUploadWidget = () => {
+    window.cloudinary.openUploadWidget(
+      {
+        cloudName: "ddhqhzyki",
+        uploadPreset: "silentbridge_upload",
+        sources: ["local", "url", "camera"],
+        resourceType: "image",
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          setImageUrl(result.info.secure_url);
+        }
+      },
+    );
+  };
 
   const handleClientSideValidation = (e) => {
     const finalCategory = category === "other" ? customCategory : category;
@@ -219,6 +246,29 @@ export default function AddSign() {
               />
             </div>
 
+            {/* IMAGE UPLOAD */}
+            <div>
+              <label className="block font-medium mb-2">
+                Upload Image (optional)
+              </label>
+
+              <button
+                type="button"
+                onClick={openUploadWidget}
+                className="w-full bg-white border border-teal-600 text-teal-600 py-3 rounded-xl hover:bg-teal-50 transition cursor-pointer"
+              >
+                Upload Image
+              </button>
+
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="Uploaded"
+                  className="mt-4 w-40 rounded"
+                />
+              )}
+            </div>
+
             {/* NOTES */}
             <div>
               <label htmlFor="notes" className="block font-medium mb-2">
@@ -263,6 +313,8 @@ export default function AddSign() {
               </p>
             )}
 
+            <input type="hidden" name="image" value={imageUrl} />
+
             <button
               type="submit"
               className="w-full bg-teal-600 text-white py-3 rounded-xl hover:bg-teal-700 transition"
@@ -273,8 +325,6 @@ export default function AddSign() {
           </Form>
         </div>
       </section>
-
-      {/* success state is no longer needed because action() redirects on success */}
     </main>
   );
 }
