@@ -4,6 +4,8 @@ export default [
   index("routes/home.jsx"),
   route("login", "routes/login.jsx"),
   route("register", "routes/register.jsx"),
+  route("forgot-password", "routes/forgot-password.jsx"),
+  route("reset-password/:token", "routes/reset-password.jsx"),
   route("dashboard", "routes/dashboard.jsx"),
   route("add-sign", "routes/add-sign.jsx"),
   route("my-signs", "routes/my-signs.jsx"),

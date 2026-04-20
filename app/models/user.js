@@ -23,6 +23,8 @@ export async function createUser({ name, email, password }) {
     name,
     email,
     password: hashedPassword,
+    resetToken: null,
+    resetTokenExpiry: null,
   });
 
   return result;
@@ -61,4 +63,47 @@ export async function getUserById(id) {
   return collection.findOne({
     _id: new ObjectId(id),
   });
+}
+
+export async function getUserByResetToken(token) {
+  const db = await getDB();
+  const collection = db.collection("users");
+
+  return collection.findOne({
+    resetToken: token,
+    resetTokenExpiry: { $gt: Date.now() },
+  });
+}
+
+export async function setResetToken(userId, token, expiry) {
+  const db = await getDB();
+  const collection = db.collection("users");
+
+  await collection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $set: {
+        resetToken: token,
+        resetTokenExpiry: expiry,
+      },
+    },
+  );
+}
+
+export async function updatePassword(userId, newPassword) {
+  const db = await getDB();
+  const collection = db.collection("users");
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await collection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $set: {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    },
+  );
 }

@@ -12,6 +12,13 @@ import {
 import "./app.css";
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router";
+import { getUserId } from "./.server/session";
+import { useLoaderData } from "react-router";
+
+export async function loader({ request }) {
+  const userId = await getUserId(request);
+  return { userId };
+}
 
 /* ---------------- META + LINKS ---------------- */
 
@@ -40,6 +47,8 @@ export const meta = () => [
 /* ---------------- LAYOUT ---------------- */
 
 export function Layout({ children }) {
+  const { userId } = useLoaderData();
+  const isLoggedIn = !!userId;
   const location = useLocation();
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -50,9 +59,6 @@ export function Layout({ children }) {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  // TEMP auth
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   const isPublicRoute = [
     "/",
@@ -203,7 +209,7 @@ export function Layout({ children }) {
             </button>
           </div>
 
-          {/* ✅ MOBILE MENU (THIS WAS MISSING) */}
+          {/* ✅ MOBILE MENU  */}
           {mobileMenu && (
             <div
               id="mobile-nav"
@@ -296,8 +302,8 @@ export function Layout({ children }) {
 
                   <button
                     onClick={() => {
-                      setIsLoggedIn(false);
                       setMobileMenu(false);
+                      navigate("/logout");
                     }}
                     className="block text-red-500"
                   >

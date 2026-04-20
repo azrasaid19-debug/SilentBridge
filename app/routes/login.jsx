@@ -150,6 +150,12 @@ export default function Login() {
             </button>
           </Form>
 
+          <p className="text-sm mt-4 text-center">
+            <Link to="/forgot-password" className="text-teal-600 underline">
+              Forgot Password?
+            </Link>
+          </p>
+
           {/* REGISTER LINK */}
           <p className="text-center text-sm text-slate-600 dark:text-slate-300 mt-6">
             Don't have an account?{" "}
